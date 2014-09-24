@@ -21,7 +21,7 @@ Or install it yourself as:
 TODO: Write usage instructions here
 
 ## Additional readings
-* https://netguru.co/blog/service-objects-in-rails-will-help?utm_source=rubyweekly&utm_medium=email
+* https://netguru.co/blog/service-objects-in-rails-will-help
 * http://brewhouse.io/blog/2014/04/30/gourmet-service-objects.html
 
 ## Contributing
