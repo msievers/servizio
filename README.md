@@ -4,21 +4,13 @@ Servizio is a gem to support you writing service objects. It was created after I
 
 I liked the ideas presented there, so I began to use them. Quickly I realised, that combining the basic concepts of service objects with something like ```ActiveModel``` would be awesome. So there was ```Servizio```.  
 
+## The basic ideas
+
+For those who haven't read the original [post](http://brewhouse.io/blog/2014/04/30/gourmet-service-objects.html), let's sum up it's basic thoughts.
+
 ## Installation
 
-Add this line to your application's Gemfile:
-
-    gem 'servizio'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
     $ gem install servizio
-
-
 
 ## Terminology, conventions and background
 
