@@ -115,6 +115,33 @@ When you execute the call method of an operation, you actually call ```Servizio:
 
 That's the reason you don't have to do anything but implement your ```call``` method for most simple use cases. Everything else is handled for you automatically.
 
+This is achived by using ruby's ```prepend``` in association with ```inherited```. If you want to know how it works exactly, have a look.
+
+```ruby
+module Servizio::Service::Call
+
+  def call
+    run_callbacks :call do
+      if authorized? && valid?
+        @called = true
+        self.result = super
+      end
+    end
+  end
+
+  ...
+end
+
+class Servizio::Service
+  require_relative "./service/call"
+
+  def self.inherited(subclass)
+    subclass.prepend(Servizio::Service::Call)
+  end
+  
+  ...
+```
+
 ## Usage
 
 ### Basic example
@@ -158,7 +185,7 @@ end
 operation.call
 ```
 
-### Why is this cool ?!
+### Why is it cool?!
 
 #### Validations included
 
