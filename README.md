@@ -18,6 +18,51 @@ Or install it yourself as:
 
 ## Usage
 
+### Terminology, conventions and background
+
+Let's clear some terms first, so that they can be used later without further explanation.
+
+#### Service
+
+A service is a subclass of ```Servizio::Service```. It has to implement a method named ```call```. It may implement ```ActiveModel```-style validations.
+
+```ruby
+require "servizio"
+
+class ChangePassword < Servizio::Service
+  attr_accessor :current_password
+  attr_accessor :new_password
+  attr_accessor :new_password_confirmation
+  attr_accessor :user
+
+  validates_presence_of :current_password
+  validates_presence_of :new_password
+  validates_presence_of :new_password_confirmation
+  validates_confirmation_of :new_password
+  validates_presence_of :user
+
+  def call
+    Some::External::Service.change_user_password(user.id, current_password, new_password)
+  end
+end
+```
+
+#### Operation
+
+An operation is an instance of an service. Let's assume you have a service called ```ChangePassword```, then ```operation = ChangePassword.new```
+
+#### States
+
+Servizio knows various states an operation can be in, namely```(denied)```, ```invalid```, ```error```, ```success```.
+
+#### Call it magic
+
+When you execute the call method of an operation, you actually call ```Servizio::Service:Call.call```, which in fact calls the operations call method later, but wraps it, so that callbacks can be triggered, validations can take place in front of an call and the state of the operation changes automatically.
+
+That's the reason you don't have to do anything but implement your ```call``` method for most simple use cases. Everything else is handled for you automatically.
+
+### Basic example
+
 ```ruby
 require "servizio"
 
@@ -56,6 +101,24 @@ end
 
 operation.call
 ```
+
+### Why is this cool ?!
+
+#### Validations included
+
+Most operations need some kind of input to operate. If we take the ```ChangePassword``` service from the basic example, it needs
+* *current_password*
+* *new_password*
+* *new_password_confirmation* (which must match *new_password*)
+
+The external service which actually changes the password should only be called, if the requirements are met. Because ```Servizio::Service``` is in fact an ```ActiveModel``` class and includes ```ActiveModel::Validations``` you can write ```ActiveRecord``` style validators right into your service object. Than you can call ```valid?``` to check, if everything is ready.
+
+Or you simply hook up with an ```on_invalid``` callback.
+
+#### Callbacks
+
+There is nothing asynchronous in ```Servizio``` till now, but you can register callbacks for various states of an service object instance. Known states are ```(denied)```, ```invalid```, ```error```, ```success```. ```denied``` only works, if the service was instantiated with an ```cancan(can)```-like ability, else an operation is never denied.
+
 
 ## Additional readings
 * https://netguru.co/blog/service-objects-in-rails-will-help
