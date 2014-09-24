@@ -16,13 +16,13 @@ Or install it yourself as:
 
     $ gem install servizio
 
-## Usage
 
-### Terminology, conventions and background
+
+## Terminology, conventions and background
 
 Let's clear some terms first, so that they can be used later without further explanation.
 
-#### Service
+### Service
 
 A service is a subclass of ```Servizio::Service```. It has to implement a method named ```call```. It may implement ```ActiveModel```-style validations.
 
@@ -47,19 +47,75 @@ class ChangePassword < Servizio::Service
 end
 ```
 
-#### Operation
+### Operation
 
 An operation is an instance of an service. Let's assume you have a service called ```ChangePassword```, then ```operation = ChangePassword.new```
 
-#### States
+```ruby
+operation = ChangePassword.new(
+  user: current_user,
+  current_password: "test",
+  new_password: "123",
+  new_password_confirmation: "123"
+)
+```
 
-Servizio knows various states an operation can be in, namely```(denied)```, ```invalid```, ```error```, ```success```.
+### Errors
 
-#### Call it magic
+Due to the fact, that ```Servizio::Service``` inludes ```ActiveModel::Validations``` we already got an error store in each derived class in form of an ```errors``` object. One point, all errors can happily reside. You can add entries there, e.g. if you call fails.
+
+```
+class ChangePassword < Servizio::Service
+  attr_accessor :current_password
+  ...
+  
+  def call
+    begin
+      Some::External::Service.change_user_password(user.id, current_password, new_password)
+    rescue
+      errors.add(:call, "Call went wrong!")
+    end
+  end
+end
+```
+
+***Convention***
+If the call fails without an result, e.g. if you are calling an external webservice and get an 500, you should set errors[:call].
+
+### States and callbacks
+
+Servizio knows various states an operation can be in, namely```(denied)```, ```invalid```, ```error```, ```success```. You can hook on to those states by using callbacks.
+
+An call is assumed to be successfull, if the operation was called and ```errors``` is empty. An operation is invalid if it was tried to be called, but didn't validated.
+
+```ruby
+operation.on_invalid -> (operation) do
+  render change_password_user_path
+end
+
+# there can be more than one
+operation.on_invalid -> (operation) do
+  log "Somebody failed to change it's password!"
+end
+
+operation.call
+
+# will be executed immediately (if the call was successfull)
+operation.on_success -> (operation) do
+  flash[:success] = "Password changed!"
+  redirect_to :user_path
+end
+```
+
+Callbacks work like jQuery promises. You can even add callbacks after an operation was called, which will trigger the corresponding callback immediately.
+
+### Call it magic
 
 When you execute the call method of an operation, you actually call ```Servizio::Service:Call.call```, which in fact calls the operations call method later, but wraps it, so that callbacks can be triggered, validations can take place in front of an call and the state of the operation changes automatically.
 
 That's the reason you don't have to do anything but implement your ```call``` method for most simple use cases. Everything else is handled for you automatically.
+
+## Usage
 
 ### Basic example
 
