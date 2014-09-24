@@ -167,9 +167,9 @@ Most operations need some kind of input to operate. If we take the ```ChangePass
 * *new_password*
 * *new_password_confirmation* (which must match *new_password*)
 
-The external service which actually changes the password should only be called, if the requirements are met. Because ```Servizio::Service``` is in fact an ```ActiveModel``` class and includes ```ActiveModel::Validations``` you can write ```ActiveRecord``` style validators right into your service object. Than you can call ```valid?``` to check, if everything is ready.
+The external service which actually changes the password should only be called, if the requirements are met. Because ```Servizio::Service``` is in fact an ```ActiveModel``` class and includes ```ActiveModel::Validations``` you can write ```ActiveRecord``` style validators right into your service object. Than you can call ```valid?``` to check, if everything is ready. Or you simply hook up with an ```on_invalid``` callback.
 
-Or you simply hook up with an ```on_invalid``` callback.
+More than this, because validations work like in ```ActiveRecord```, you can simply build forms for your services, which will exactly behave like for an ```ActiveRecord``` model. That means you can have a ```ChangePassword``` form, not an ```User``` form and it will work with gems like ```simple_form``` out-of-the-box.
 
 #### Callbacks
 
