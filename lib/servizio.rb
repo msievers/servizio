@@ -1,5 +1,6 @@
 require "servizio/version"
 
 module Servizio
-  # Your code goes here...
+  require_relative "./servizio/service"
+  require_relative "./servizio/rails/controller_additions"
 end
