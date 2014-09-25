@@ -27,19 +27,19 @@ class User::ChangePassword
 end
 ```
 
-## Why is so cool?!
+### Why is this cool?!
 
-### Clean-up models and controllers
+#### Clean-up models and controllers
 
 In your everyday's rails app, business logic is often cluttered over controllers, models and so on. In order to understand, what it means to *change a users password* you have to walk through a couple of files and pick the relevant parts.
 
 Service objects concentrate this logic, so you can have a look at ```app/services/user/change_password``` and you know whats going on. On the other side, this means that your controllers/models get much simpler. They can do, what they should do. Models should only be concerned about associations, scopes, persistence etc. Controllers should handle incoming requests and pass them down to appropriate services.
 
-### Quick overview of what an app can do
+#### Quick overview of what an app can do
 
 So you want to know, what your app does/is able to do? Just look into ```app/services```. There you can see very quickly, which uses cases (services) are present and can be used.
 
-### Splitting up complex business logic is easy
+#### Splitting up complex business logic is easy
 
 It's easy for an service object to call another one. That way you can split up complex uses cases into simpler ones. Let's get back to our ```User::ChangePassword```. This could be involve two actions
 * verify, that the *current_password* is correct
@@ -59,7 +59,7 @@ end
 
 This is a simple example, but the idea should be clear. Split up complex workflows in to many single one's.
 
-### Call them from anywhere
+#### Call them from anywhere
 
 Have you ever been in a situation, where you find yourself duplicating functionality for an api or a rake task, allthough you knew you had this functionality allready in your app ? Well, with service objects, this functionality can be called from anywhere. No more duplication. Call your service objects from other service objects, from DelayedJob/Rescue/Sidekiq jobs, inside a rake task or simply the console.
 
@@ -67,9 +67,40 @@ Have you ever been in a situation, where you find yourself duplicating functiona
 $> User::ChangePassword(my_user, "test", "123")
 ```
 
-## Installation
+## What does servizio add to these basic ideas
 
-    $ gem install servizio
+If you read the *basic ideas* paragraph you noticed, you may noticed, that this can all be done just with POROs. So why Servizio? Well, it simple extends the basic ideas and goes some steps further.
+
+### Common service class
+
+Servizio provides a super class, your services can be inherited from. I will explain the benefits later.
+
+```ruby
+class User::ChangePassword < Servizio::Service
+...
+end
+```
+
+### Service objects are activemodel objects
+
+Because ```Servizio::Service``` includes ```ActiveModel::Model``` all subclass are activemodel objects. This is especially cool, if you work with rails, as you can use activemodel objects similarly to activerecord objects. Besides ```ActiveModel::Model```, ```Servizio::Service``` includes some other activemodel modules.
+
+```
+class Servizio::Service
+  ...
+  extend ActiveModel::Callbacks
+  include ActiveModel::Model
+  include ActiveModel::Validations
+  ...
+end
+```
+
+As you can see, validations are also included, which will lead to another nice feature.
+
+### Service objects can be validated
+
+
+
 
 ## Terminology, conventions and background
 
