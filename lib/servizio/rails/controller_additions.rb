@@ -6,8 +6,8 @@ module Servizio::Rails::ControllerAdditions
     Servizio::Service.class_variable_get(:@@states).each do |state|
       state_handler_setter = operation.method("once_on_#{state}")
       state_handler =
-      if options["on_#{state}"]
-        options["on_#{state}"]
+      if options["on_#{state}".to_sym]
+        options["on_#{state}".to_sym]
       elsif context.respond_to?(method_name = "handle_operation_#{state}", true)
         context.method(method_name)
       end
@@ -19,9 +19,9 @@ module Servizio::Rails::ControllerAdditions
               state_handler[:flash].each_pair { |key, value| context.flash[key] = value }
             end
 
-            if (path_or_url = handler[:redirect_to]).present?
+            if (path_or_url = state_handler[:redirect_to]).present?
               context.redirect_to path_or_url
-            elsif (path_or_url = handler[:render]).present?
+            elsif (path_or_url = state_handler[:render]).present?
               context.render path_or_url
             end
           elsif state_handler.is_a?(Proc)

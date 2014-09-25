@@ -7,6 +7,7 @@ module Servizio::Service::Call
         self.result = super
       else
         @called = false
+        true # in order for run_callbacks to run
       end
     end
   end
