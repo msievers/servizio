@@ -85,7 +85,7 @@ end
 
 Because ```Servizio::Service``` includes ```ActiveModel::Model``` all subclass are activemodel objects. This is especially cool, if you work with rails, as you can use activemodel objects similarly to activerecord objects. Besides ```ActiveModel::Model```, ```Servizio::Service``` includes some other activemodel modules.
 
-```
+```ruby
 class Servizio::Service
   ...
   extend ActiveModel::Callbacks
@@ -95,11 +95,40 @@ class Servizio::Service
 end
 ```
 
-As you can see, validations are also included, which will lead to another nice feature.
+Because every service is an activemodel object, the calling semantic changes slightly. With servizio, you create an instance of an service with all necessary parameters as a hash and call the resulting instance (an operation).
+
+```ruby
+operation = User::ChangePassword.new(user: current_user, current_password: "123", new_password: "test")
+operation.call
+```
+
+Because ```Servizio::Service``` also includes ```ActiveModel::Validations```, you can validate your operation before calling it, using activerecord-style validators.
+
+```ruby
+class ChangePassword < Servizio::Service
+  attr_accessor :current_password
+  attr_accessor :new_password
+  attr_accessor :new_password_confirmation
+  attr_accessor :user
+
+  validates_presence_of :current_password
+  validates_presence_of :new_password
+  validates_presence_of :new_password_confirmation
+  validates_confirmation_of :new_password
+  validates_presence_of :user
+
+  def call
+    Some::External::Service.change_user_password(user.id, current_password, new_password)
+  end
+end
+
+operation = User::ChangePassword.new(user: current_user, current_password: "123", new_password: "test")
+operation.call if operation.valid?
+```
 
 ### Service objects can be validated
 
-
+Because each service is an activemodel object, you can
 
 
 ## Terminology, conventions and background
