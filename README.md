@@ -59,7 +59,13 @@ end
 
 This is a simple example, but the idea should be clear. Split up complex workflows in to many single one's.
 
+### Call them from anywhere
 
+Have you ever been in a situation, where you find yourself duplicating functionality for an api or a rake task, allthough you knew you had this functionality allready in your app ? Well, with service objects, this functionality can be called from anywhere. No more duplication. Call your service objects from other service objects, from DelayedJob/Rescue/Sidekiq jobs, inside a rake task or simply the console.
+
+```ruby
+$> User::ChangePassword(my_user, "test", "123")
+```
 
 ## Installation
 
