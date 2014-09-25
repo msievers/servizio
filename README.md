@@ -8,17 +8,13 @@ I liked the ideas presented there, so I began to use them. Quickly I realised, t
 
 For those who haven't read the original [post](http://brewhouse.io/blog/2014/04/30/gourmet-service-objects.html), let's sum up it's basic thoughts.
 
-### A service object *does one thing*
-
-A service object should hold the business logic to perform one action, e.g. to change a users password. It should start with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```.
+A service object *does one thing*. It should hold the business logic to perform one action, e.g. to change a users password. It should start with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```.
 
 In order to keep things organzied, subdirectories/modules should be used, e.g. ```app/services/user/change_password``` which corresponds to ```User::ChangePassword```. Generally subdirectories/modules holding services should be named with the singular noun, representing the object they manipulate, e.g. ```app/services/user/...``` not ```users```, resulting in ```User::ChangePassword``` not ```Users::...``` That way, things are consistent with the rails naming convention regarding models.
 
 That does not there has to be a corresponding model if you create a service subdirectory. It's only a convention. So you are free to create something like ```app/services/statistic/create.rb```, allthough there is no ```Statistic``` model. It should be all about business logic. If there is a corresponding model, fine. If not, never mind.
 
-A service object should respond to the ```call``` method. It's the way lambdas and procs are called, so its obvious to use it as a convention.
-
-At this point we have something like this
+A service object should respond to the ```call``` method. It's the way lambdas and procs are called, so its obvious to use it as a convention. At this point we have something like this
 
 ```ruby
 # app/services/user/change_password
@@ -30,6 +26,40 @@ class User::ChangePassword
   end
 end
 ```
+
+## Why is so cool?!
+
+### Clean-up models and controllers
+
+In your everyday's rails app, business logic is often cluttered over controllers, models and so on. In order to understand, what it means to *change a users password* you have to walk through a couple of files and pick the relevant parts.
+
+Service objects concentrate this logic, so you can have a look at ```app/services/user/change_password``` and you know whats going on. On the other side, this means that your controllers/models get much simpler. They can do, what they should do. Models should only be concerned about associations, scopes, persistence etc. Controllers should handle incoming requests and pass them down to appropriate services.
+
+### Quick overview of what an app can do
+
+So you want to know, what your app does/is able to do? Just look into ```app/services```. There you can see very quickly, which uses cases (services) are present and can be used.
+
+### Splitting up complex business logic is easy
+
+It's easy for an service object to call another one. That way you can split up complex uses cases into simpler ones. Let's get back to our ```User::ChangePassword```. This could be involve two actions
+* verify, that the *current_password* is correct
+* set the users password to *new_password* if the former check passes
+
+So there could be two services ```User::Authenticate``` and ```User::SetPassword``` and of course our ```User::ChangePassword``` service.
+
+```ruby
+class User::ChangePassword
+  def call(user, old_password, new_password)
+    if User::Authenticate.new.call(user, old_password)
+      User::SetPassword.new.call(user, new_password)
+    end
+  end
+end
+```
+
+This is a simple example, but the idea should be clear. Split up complex workflows in to many single one's.
+
+
 
 ## Installation
 
