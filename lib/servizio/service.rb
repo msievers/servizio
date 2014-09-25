@@ -28,6 +28,10 @@ class Servizio::Service
       def on_#{state}(callable)
         add_callback(:on_#{state}, callable)
       end
+
+      def once_on_#{state}(callable)
+        add_callback(:on_#{state}, callable, only_execute_once: true)
+      end
     code
   end
 
@@ -48,8 +52,8 @@ class Servizio::Service
   #
   private
   #
-  def add_callback(queue, callable)
-    new_callback = { callable: callable, executed: false, queue: queue.to_sym }
+  def add_callback(queue, callable, options = {})
+    new_callback = { callable: callable, executed: false, queue: queue.to_sym }.merge!(options)
     callbacks.push(new_callback)
     execute_callback(new_callback) if called? # execute it immediately, if operation was called previously
   end
@@ -73,6 +77,8 @@ class Servizio::Service
         callback[:callable].call(self)
         callback[:executed] = true
       end
+
+      callbacks.delete(callback) if callback[:only_execute_once]
     end
   end
 
