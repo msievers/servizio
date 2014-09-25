@@ -10,13 +10,26 @@ For those who haven't read the original [post](http://brewhouse.io/blog/2014/04/
 
 ### A service object *does one thing*
 
-A service object should hold the business logic to perform one action, e.g. to change a users password. It should start with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```. In order to keep things organzied, subdirectories/modules should be used, e.g. ```app/services/user/change_password``` which corresponds to ```User::ChangePassword```.
+A service object should hold the business logic to perform one action, e.g. to change a users password. It should start with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```.
 
-Generally subdirectories/modules holding services should be named with the singular noun, representing the object they manipulate, e.g. ```app/services/user/...``` not ```users```, resulting in ```User::ChangePassword``` not ```Users::...``` That way, things are consistent with the rails naming convention regarding models.
+In order to keep things organzied, subdirectories/modules should be used, e.g. ```app/services/user/change_password``` which corresponds to ```User::ChangePassword```. Generally subdirectories/modules holding services should be named with the singular noun, representing the object they manipulate, e.g. ```app/services/user/...``` not ```users```, resulting in ```User::ChangePassword``` not ```Users::...``` That way, things are consistent with the rails naming convention regarding models.
 
-That does not mean that there have to be a corresponding model if you create a service subdirectory. It's only a convention. So you are free to create something like ```app/services/statistic/create.rb```, allthough there is no ```Statistic``` model. It should be all about business logic. If there is a corresponding model, fine. If not, never mind.
+That does not there has to be a corresponding model if you create a service subdirectory. It's only a convention. So you are free to create something like ```app/services/statistic/create.rb```, allthough there is no ```Statistic``` model. It should be all about business logic. If there is a corresponding model, fine. If not, never mind.
 
-A service object should respond to the ```call``` method. It's the way lambdas and procs are called, so its obvious to use that as a convention.
+A service object should respond to the ```call``` method. It's the way lambdas and procs are called, so its obvious to use it as a convention.
+
+At this point we have something like this
+
+```ruby
+# app/services/user/change_password
+class User::ChangePassword
+  def call(user, old_password, new_password)
+    # check if the old_password is valid
+    # set the users password to new_password
+    ...
+  end
+end
+```
 
 ## Installation
 
