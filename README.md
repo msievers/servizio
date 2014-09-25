@@ -95,6 +95,8 @@ class Servizio::Service
 end
 ```
 
+#### Calling semantic
+
 Because every service is an activemodel object, the calling semantic changes slightly. With servizio, you create an instance of an service with all necessary parameters as a hash and call the resulting instance (an operation).
 
 ```ruby
@@ -102,10 +104,12 @@ operation = User::ChangePassword.new(user: current_user, current_password: "123"
 operation.call
 ```
 
+#### Validations
+
 Because ```Servizio::Service``` also includes ```ActiveModel::Validations```, you can validate your operation before calling it, using activerecord-style validators.
 
 ```ruby
-class ChangePassword < Servizio::Service
+class User::ChangePassword < Servizio::Service
   attr_accessor :current_password
   attr_accessor :new_password
   attr_accessor :new_password_confirmation
@@ -125,6 +129,84 @@ end
 operation = User::ChangePassword.new(user: current_user, current_password: "123", new_password: "test")
 operation.call if operation.valid?
 ```
+
+#### Generic error reporting
+
+As a side-effect of including ```ActiveModel::Validations```, any service has an ```errors``` object. If something goes wrong inside your call, you can add an entry there to signal this event to the caller. This solves the problem, how to get notified/react on errors.
+
+One could also simply return ```nil``` from a call in case of an error. But this is not a good solution, because maybe the call returns without a result in any case. ```true``` or ```false``` are also ambiguous. Thatswhy error reporting should be separate from the call result.
+
+```ruby
+class User::ChangePassword < Servizio::Service
+  ...
+  def call
+    begin
+      Some::External::Service.change_user_password(user.id, current_password, new_password)
+    rescue
+      errors.add(:call, "The call failed!")
+    end
+  end
+end
+```
+
+### Operation state accessors
+
+If you subclass ```Servizio::Service``` your service has several state accessors
+* called?
+* error? (alias failed?)
+* success? (alias succeeded?)
+* valid?
+
+You can use them to react on the result of an operation.
+
+```ruby
+operation = User::ChangePassword.new(user: current_user, current_password: "123", new_password: "test")
+operation.call if operation.valid?
+
+if operation.failed?
+  render "..."
+elsif operation.succeeded?
+  redirect_to "..."
+end
+```
+
+### Some meta programming to ease service creation
+
+Have you wondered, where ```operation.result``` comes from ? In no example above it's explictly set. Well let's dig into how ```call``` actualy is implemented.
+
+When you execute the call method of an operation, you actually call ```Servizio::Service:Call.call```, which in fact calls the operations call method later, but wraps it, so that callbacks can be triggered, validations can take place in front of an call and the state of the operation changes automatically.
+
+That's the reason you don't have to do anything but implement your ```call``` method for most simple use cases. Everything else is handled for you automatically.
+
+This is achived by using ruby's ```prepend``` in association with ```inherited```. If you want to know how it works exactly, have a look.
+
+```ruby
+module Servizio::Service::Call
+
+  def call
+    run_callbacks :call do
+      if authorized? && valid?
+        @called = true
+        self.result = super
+      end
+    end
+  end
+
+  ...
+end
+
+class Servizio::Service
+  require_relative "./service/call"
+
+  def self.inherited(subclass)
+    subclass.prepend(Servizio::Service::Call)
+  end
+  
+  ...
+```
+
+As you can see, before a operation is called, it's validated. So an operation, that's invalid, will not execute the acutal call method.
+
 
 ### Service objects can be validated
 
