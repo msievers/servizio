@@ -10,7 +10,7 @@ For those who haven't read the original [post](http://brewhouse.io/blog/2014/04/
 
 ### A service object *does one thing*
 
-A service object should hold the business logic to perform one action, e.g. to change a users password. It should star with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```. In order to keep things organzied, subdirectories/modules should be used, e.g. ```app/services/user/change_password``` which corresponds to ```User::ChangePassword```.
+A service object should hold the business logic to perform one action, e.g. to change a users password. It should start with a verb (but your mileage may vary). When used with rails, the should be homed in ```app/services```. In order to keep things organzied, subdirectories/modules should be used, e.g. ```app/services/user/change_password``` which corresponds to ```User::ChangePassword```.
 
 Generally subdirectories/modules holding services should be named with the singular noun, representing the object they manipulate, e.g. ```app/services/user/...``` not ```users```, resulting in ```User::ChangePassword``` not ```Users::...``` That way, things are consistent with the rails naming convention regarding models.
 
