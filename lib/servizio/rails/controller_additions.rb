@@ -24,7 +24,7 @@ module Servizio::Rails::ControllerAdditions
             elsif (path_or_url = state_handler[:render]).present?
               context.render path_or_url
             end
-          elsif state_handler.is_a?(Proc)
+          elsif state_handler.respond_to?(:call)
             state_handler.call(op) 
           end
         end
@@ -36,9 +36,13 @@ module Servizio::Rails::ControllerAdditions
 
   # only this method is actually mixed in by include
   def call_operation(operation, options = {})
-    options.reverse_merge!({
-      ability: options[:ability] || (respond_to?(:current_ability) ? current_ability : nil)
-    })
+    options[:authorize] = true if options[:authorize].nil?
+
+    if options[:authorize]
+      options.reverse_merge!({
+        ability: options[:ability] || (respond_to?(:current_ability) ? current_ability : nil)
+      })
+    end
 
     Servizio::Rails::ControllerAdditions.call_operation(operation, self, options)
   end

@@ -44,6 +44,10 @@ class Servizio::Service
   end
   alias_method :failed?, :error?
 
+  def i18n_scope
+    model_name.i18n_key.to_s.gsub("/", ".")    
+  end
+
   def success?
     called? && errors.blank?
   end
