@@ -7,13 +7,15 @@ module Servizio::Service::Call
         self.result = super
       else
         @called = false
-        true # in order for run_callbacks to run
       end
+
+      # since the result influences if the callbacks are triggered or not
+      # we always return self and the user can/has to call .result on it
+      self
     end
   end
 
   def call!
     call
-    self
   end
 end
