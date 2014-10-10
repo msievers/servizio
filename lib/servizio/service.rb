@@ -2,16 +2,14 @@ require "active_model"
 
 class Servizio::Service
   require_relative "./service/call"
+  require_relative "./service/inherited_handler"
 
   extend ActiveModel::Callbacks
   include ActiveModel::Model
   include ActiveModel::Validations
+  extend Servizio::Service::InheritedHandler
 
   @@states = %i(denied error invalid success)
-
-  def self.inherited(subclass)
-    subclass.prepend(Servizio::Service::Call)
-  end
 
   define_model_callbacks :call
   
