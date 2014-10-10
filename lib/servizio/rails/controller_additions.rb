@@ -1,49 +1,21 @@
 module Servizio::Rails::ControllerAdditions
-  def self.call_operation(operation, context = nil, options = {})
-    # use cancan(can) ability if present
-    operation.ability = options[:ability]
+  def call_operation(operation, options = {})
+    # default to authorize every operation call unless given
+    options[:authorize] = true if options[:authorize].nil?
 
-    Servizio::Service.class_variable_get(:@@states).each do |state|
-      state_handler_setter = operation.method("once_on_#{state}")
-      state_handler =
-      if options["on_#{state}".to_sym]
-        options["on_#{state}".to_sym]
-      elsif context.respond_to?(method_name = "handle_operation_#{state}", true)
-        context.method(method_name)
-      end
+    # use cancan(can) like ability if given or present
+    if options[:authorize]
+      operation.ability = options[:ability] || (respond_to?(:current_ability) ? current_ability : nil)
+    end
 
-      if state_handler.present?
-        state_handler_setter.call -> (op) do
-          if state_handler.is_a?(Hash)
-            if state_handler[:flash].present?
-              state_handler[:flash].each_pair { |key, value| context.flash[key] = value }
-            end
-
-            if (path_or_url = state_handler[:redirect_to]).present?
-              context.redirect_to path_or_url
-            elsif (path_or_url = state_handler[:render]).present?
-              context.render path_or_url
-            end
-          elsif state_handler.respond_to?(:call)
-            state_handler.call(op) 
-          end
-        end
+    # register a one-time event state handler for every operation state,
+    # executing either options[:on_...] or self.handle_operation_...
+    operation.states.each do |state|
+      operation.method("once_on_#{state}").call -> (op) do
+        (options[:"on_#{state}"] || self.method("handle_operation_#{state}")).call(op)
       end
     end
 
     operation.call
-  end
-
-  # only this method is actually mixed in by include
-  def call_operation(operation, options = {})
-    options[:authorize] = true if options[:authorize].nil?
-
-    if options[:authorize]
-      options.reverse_merge!({
-        ability: options[:ability] || (respond_to?(:current_ability) ? current_ability : nil)
-      })
-    end
-
-    Servizio::Rails::ControllerAdditions.call_operation(operation, self, options)
   end
 end
