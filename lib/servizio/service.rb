@@ -9,8 +9,6 @@ class Servizio::Service
   include ActiveModel::Validations
   extend Servizio::Service::InheritedHandler
 
-  @@states = %i(denied error invalid success)
-
   define_model_callbacks :call
   
   # watch out for ActiveModel::Callbacks method names
@@ -19,6 +17,8 @@ class Servizio::Service
 
   attr_accessor :ability # a cancan(can) ability
   attr_accessor :result
+
+  @@states = %i(denied error invalid success)
 
   # this is only to dry things up
   @@states.each do |state|
@@ -33,23 +33,13 @@ class Servizio::Service
     code
   end
 
-  def authorized?; can?(:call, self);        end
-  def denied?;     !authorized?;             end
-  def called?;     @called == true;          end
-
-  def error?
-    called? && errors.present?
-  end
-  alias_method :failed?, :error?
-
-  def i18n_scope
-    model_name.i18n_key.to_s.gsub("/", ".")    
-  end
-
-  def success?
-    called? && errors.blank?
-  end
-  alias_method :succeeded?, :success?
+  def authorized?; can?(:call, self);                       end
+  def denied?;     !authorized?;                            end
+  def called?;     @called == true;                         end
+  def error?;      called? && errors.present?;              end
+  def i18n_scope;  model_name.i18n_key.to_s.gsub("/", "."); end
+  def states;      @@states;                                end
+  def success?;    called? && errors.blank?;                end
 
   #
   private
