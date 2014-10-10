@@ -9,8 +9,4 @@ describe Servizio::Rails::ControllerAdditions do
   end
 
   let(:operation) { addition_service.new(operands: [1,2,3]) }
-
-  it "foo" do
-    described_class.call_operation(operation)
-  end
 end
