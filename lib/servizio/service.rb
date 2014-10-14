@@ -37,7 +37,6 @@ class Servizio::Service
   def denial?;     !authorized?;                            end
   def called?;     @called == true;                         end
   def error?;      called? && errors.present?;              end
-  def i18n_scope;  model_name.i18n_key.to_s.gsub("/", "."); end
   def states;      @@states;                                end
   def success?;    called? && errors.blank?;                end
 
