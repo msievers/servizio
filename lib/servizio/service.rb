@@ -18,7 +18,7 @@ class Servizio::Service
   attr_accessor :ability # a cancan(can) ability
   attr_accessor :result
 
-  @@states = %i(denied error invalid success)
+  @@states = %i(denial error invalid success)
 
   # this is only to dry things up
   @@states.each do |state|
@@ -34,7 +34,7 @@ class Servizio::Service
   end
 
   def authorized?; can?(:call, self);                       end
-  def denied?;     !authorized?;                            end
+  def denial?;     !authorized?;                            end
   def called?;     @called == true;                         end
   def error?;      called? && errors.present?;              end
   def i18n_scope;  model_name.i18n_key.to_s.gsub("/", "."); end
@@ -60,7 +60,7 @@ class Servizio::Service
 
   def execute_callback(callback)
     if
-      denied?  &&             callback[:queue] == :on_denied ||
+      denial?  &&             callback[:queue] == :on_denial ||
       error?   &&             callback[:queue] == :on_error ||
       !called? && invalid? && callback[:queue] == :on_invalid || # don't call invalid? here, it might erase the errors object
       success? &&             callback[:queue] == :on_success
