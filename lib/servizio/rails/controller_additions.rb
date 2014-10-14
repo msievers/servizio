@@ -12,7 +12,7 @@ module Servizio::Rails::ControllerAdditions
     # executing either options[:on_...] or self.handle_operation_...
     operation.states.each do |state|
       operation.method("once_on_#{state}").call -> (op) do
-        (options[:"on_#{state}"] || self.method("handle_operation_#{state}")).call(op)
+        (options[:"on_#{state}"] || self.method("on_#{state}")).call(op)
       end
     end
 
