@@ -1,5 +1,9 @@
 # Servizio
 
+[![Build Status](https://travis-ci.org/msievers/servizio.svg?branch=master)](https://travis-ci.org/msievers/servizio)
+[![Test Coverage](https://codeclimate.com/github/msievers/servizio/badges/coverage.svg)](https://codeclimate.com/github/msievers/servizio)
+[![Code Climate](https://codeclimate.com/github/msievers/servizio/badges/gpa.svg)](https://codeclimate.com/github/msievers/servizio)
+
 Servizio is a gem to support you creating service objects. It was created after I read a blog post about [service objects](http://brewhouse.io/blog/2014/04/30/gourmet-service-objects.html) from [Philippe Creux](https://twitter.com/pcreux). Realy great post, check it out.
 
 I liked the ideas presented there, so I began to use them. Quickly I realised, that combining the basic concepts presented in this post with something like ```ActiveModel``` would be awesome. So there was ```Servizio```.  
