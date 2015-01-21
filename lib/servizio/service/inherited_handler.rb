@@ -8,7 +8,7 @@ module Servizio::Service::InheritedHandler
       end
 
       def self.new(*args, &block)
-        (obj = original_new(*args, &block)).singleton_class.prepend(Servizio::Service::Call)
+        (obj = original_new(*args, &block)).singleton_class.send(:prepend, Servizio::Service::Call)
         return obj
       end
     end
