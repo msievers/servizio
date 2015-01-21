@@ -18,7 +18,8 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activemodel", ">= 4.0.0"
   
-  spec.add_development_dependency "bundler", "~> 1.6"
+  spec.add_development_dependency "bundler",   "~> 1.7"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec",   ">= 3.0.0", "< 4.0.0"
+  spec.add_development_dependency "rspec",     ">= 3.0.0", "< 4.0.0"
+  spec.add_development_dependency "simplecov", ">= 0.8.0"
 end
