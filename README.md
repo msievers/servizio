@@ -28,7 +28,7 @@ end
 operation = MyService.new(operands: [1,2,3])
 
 # call the operation and get it's result
-operation.call.result # => 6
+operation.call!.result # => 6
 ```
 
 ## Additional readings
