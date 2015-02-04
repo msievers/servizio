@@ -1,79 +1,133 @@
 describe Servizio::Service do
-  let(:operation) do
-    Class.new(described_class) do
-      def call
-        1 + 1
-      end
-    end.new
-  end
+  context "if derived" do
+    let(:service) do
+      Class.new(described_class) do
+        attr_accessor :should_fail
+        attr_accessor :summands
 
-  context "when instantiated" do
-    let(:states)  { described_class.class_variable_get(:@@states) }
+        validates_presence_of :summands
 
-    it "has on_[state] registration function for each state" do
-      states.each do |state|
-        expect(operation).to respond_to("on_#{state}")
-      end
-    end
-
-    it "has once_on_[state] registration function for each state" do
-      states.each do |state|
-        expect(operation).to respond_to("once_on_#{state}")
-      end
-    end
-
-    describe "on_[state]" do
-      it "is run everytime the operation is called" do
-        global_state = 0
-        operation.on_success -> (operation) { global_state += 1 }
-        2.times { operation.call }
-        expect(global_state).to eq(2)
-      end
-    end
-
-    describe "once_on_[state]" do
-      it "is only run once" do
-        global_state = 0
-        operation.once_on_success -> (operation) { global_state += 1 }
-        2.times { operation.call }
-        expect(global_state).to eq(1)
-      end
-    end
-  end
-
-  context "when derived" do
-    describe ".call" do
-      it "triggers activemodel callbacks" do
-        global_state = false
-        operation.on_success -> (operation) { global_state = true }
-        operation.call
-        expect(global_state).to be(true)
-      end
-
-      context "failed" do
-        let(:operation) do
-          Class.new(described_class) do
-            def call
-              errors.add(:call, "failed")
-            end
-          end.new
+        def should_fail?
+          @should_fail == true
         end
 
-        it "triggers on_error service callbacks" do
-          global_state = nil
-          operation.on_error -> (operation) { global_state = "error" }
-          operation.on_success -> (operation) { global_state = "success" }
-          operation.call
-          expect(global_state).to eq("error")
+        def call
+          if should_fail?
+            errors.add(:call, "failed")
+          else
+            summands.reduce(:+)
+          end
         end
       end
-      
-      context "was successfull" do
-        it "triggers on_success service callbacks" do
-          global_state = false
-          operation.on_success -> (operation) { global_state = true }
-          operation.call
-          expect(global_state).to be(true)
+    end
+
+    let(:summands)             { [1,2,3] }
+    let(:succeeding_operation) { service.new summands: summands }
+    let(:failing_operation)    { service.new summands: summands, should_fail: true }
+    let(:invalid_operation)    { service.new }
+
+    context "if derived as anonymous class" do
+      # http://stackoverflow.com/questions/14431723/activemodelvalidations-on-anonymous-class
+      it "sets the class name to something non-blank to allow validations" do
+        expect(service.name).not_to be_blank
+      end
+    end
+
+    context "if derived from a derived class" do
+      let(:derived_service) { Class.new(service) }
+
+      it "works as expected" do
+        expect(derived_service.new(summands: summands).call.result).to eq(summands.reduce(:+))
+      end
+    end
+
+    #
+    # call
+    #
+    describe "#call" do
+      context "if the operation is valid with respect to its validators" do
+        it "makes #called? return true" do
+          expect(succeeding_operation.call.called?).to eq(true)
+        end
+      end
+
+      context "if the operation is not valid with respect to its validators" do
+        it "makes #called? return false" do
+          expect(invalid_operation.call.called?).to eq(false)
+        end
+      end
+    end
+
+    #
+    # called?
+    #
+    describe "#called?" do
+      context "if the operation was called (whether there were failures or not)" do
+        it "returns true" do
+          expect(succeeding_operation.call.called?).to be(true)
+          expect(failing_operation.call.called?).to be(true)
+        end
+      end
+    end
+
+    describe "#failed?" do
+      context "if the operation was called without errors" do
+        it "returns false" do
+          expect(succeeding_operation.call.failed?).to be(false)
+        end
+      end
+
+      context "if the operation added something to \"errors\"" do
+        it "returns true" do
+          expect(failing_operation.call.failed?).to be(true)
+        end
+      end
+
+      context "if the operation was not called" do
+        it "returns false" do
+          expect(succeeding_operation.failed?).to be(false)
+          expect(failing_operation.failed?).to be(false)
+        end
+      end
+    end
+
+    #
+    # result
+    #
+    describe "result" do
+      context "if the operation was called" do
+        it "provides the return value of the call method" do
+          expect(succeeding_operation.call.result).to eq(summands.reduce(:+))
+        end
+      end
+
+      context "if the operation was not called" do
+        it "raises an error" do
+          expect { succeeding_operation.result}.to raise_error(described_class::OperationNotCalledError)
+        end
+      end
+    end
+
+    #
+    # succeeded?
+    #
+    describe "#succeeded?" do
+      context "if the operation was called without errors" do
+        it "returns true" do
+          expect(succeeding_operation.call.succeeded?).to be(true)
+        end
+      end
+
+      context "if the operation added something to \"errors\"" do
+        it "returns false" do
+          expect(failing_operation.call.succeeded?).to be(false)
+        end
+      end
+
+      context "if the operation was not called" do
+        it "returns false" do
+          expect(succeeding_operation.succeeded?).to be(false)
+          expect(failing_operation.succeeded?).to be(false)
         end
       end
     end

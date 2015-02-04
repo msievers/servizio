@@ -1,83 +1,68 @@
 require "active_model"
 
 class Servizio::Service
-  require_relative "./service/call"
-  require_relative "./service/inherited_handler"
-
-  extend ActiveModel::Callbacks
   include ActiveModel::Model
   include ActiveModel::Validations
-  extend Servizio::Service::InheritedHandler
 
-  define_model_callbacks :call
-  
-  # watch out for ActiveModel::Callbacks method names
-  before_call :reset_callbacks
-  after_call :execute_callbacks
-
-  attr_accessor :ability # a cancan(can) ability
   attr_accessor :result
 
-  @@states = %i(denial error invalid success)
+  OperationNotCalledError = Class.new(StandardError)
 
-  # this is only to dry things up
-  @@states.each do |state|
-    class_eval <<-code
-      def on_#{state}(callable)
-        add_callback(:on_#{state}, callable)
-      end
-
-      def once_on_#{state}(callable)
-        add_callback(:on_#{state}, callable, only_execute_once: true)
-      end
-    code
+  # http://stackoverflow.com/questions/14431723/activemodelvalidations-on-anonymous-class
+  def self.name
+    super ? super : "__anonymous_servizio_service_class__"
   end
 
-  def authorized?; can?(:call, self);                       end
-  def denial?;     !authorized?;                            end
-  def called?;     @called == true;                         end
-  def error?;      called? && errors.present?;              end
-  def states;      @@states;                                end
-  def success?;    called? && errors.blank?;                end
+  def result
+    called? ? @result : (raise OperationNotCalledError)
+  end
+
+  def called?
+    @called == true
+  end
+
+  def failed?
+    called? && errors.present?
+  end
+
+  def succeeded?
+    called? && errors.blank?
+  end
 
   #
-  private
+  # This code does some metaprogramming magic. It overwrites .new, so that every
+  # instance of a class derived from Servizio::Service, gets a module prepended
+  # automatically. This way, one can easily "wrap" the methods, e.g. #call.
   #
-  def add_callback(queue, callable, options = {})
-    new_callback = { callable: callable, executed: false, queue: queue.to_sym }.merge!(options)
-    callbacks.push(new_callback)
-    execute_callback(new_callback) if called? # execute it immediately, if operation was called previously
-  end
+  module MethodDecorators
+    module Call
+      def call
+        if valid?
+          self.result = super
+          @called = true
+        else
+          @called = false
+        end
 
-  def callbacks
-    @callbacks ||= []
-  end
-
-  def can?(*args)
-    @ability.respond_to?(:can?) ? @ability.can?(*args) : true # default to true
-  end
-
-  def execute_callback(callback)
-    if
-      denial?  &&             callback[:queue] == :on_denial ||
-      error?   &&             callback[:queue] == :on_error ||
-      !called? && invalid? && callback[:queue] == :on_invalid || # don't call invalid? here, it might erase the errors object
-      success? &&             callback[:queue] == :on_success
-    then
-      unless callback[:executed]
-        callback[:callable].call(self)
-        callback[:executed] = true
+        self
       end
+    end
 
-      callbacks.delete(callback) if callback[:only_execute_once]
+    def inherited(subclass)
+      subclass.instance_eval do
+        alias :original_new :new
+
+        def self.inherited(subsubclass)
+          subsubclass.extend(Servizio::Service::MethodDecorators)
+        end
+
+        def self.new(*args, &block)
+          (obj = original_new(*args, &block)).singleton_class.send(:prepend, Servizio::Service::MethodDecorators::Call)
+          return obj
+        end
+      end
     end
   end
 
-  def execute_callbacks
-    callbacks.each { |callback| execute_callback(callback) }
-  end
-
-  def reset_callbacks
-    callbacks.each { |callback| callback[:executed] = false }
-  end
+  extend MethodDecorators
 end
