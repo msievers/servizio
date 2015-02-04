@@ -26,17 +26,8 @@ end
 # create an instance of a service (a.k.a. an operation)
 operation = MyService.new(operands: [1,2,3])
 
-# before the operation was called, it's neither failed nor succeeded
-operation.called?    # => false
-operation.failed?    # => false
-operation.succeeded? # => false
-operation.result     # => raises Servizio::Service::OperationNotCalledError
-
-operation.call
-
-operation.called?   # => true
-operation.succeeded # => true
-operation.result    # => 6
+# call the operation and get it's result
+operation.call.result # => 6
 ```
 
 ## Additional readings
