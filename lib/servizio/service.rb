@@ -46,6 +46,8 @@ class Servizio::Service
 
         self
       end
+
+      alias_method :call!, :call
     end
 
     def inherited(subclass)

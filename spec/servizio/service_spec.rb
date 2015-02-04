@@ -59,6 +59,15 @@ describe Servizio::Service do
     end
 
     #
+    # call!
+    #
+    describe "#call!" do
+      it "is an alias for call" do
+        expect(succeeding_operation.call.result).to eq(service.new(summands: summands).call!.result)
+      end
+    end
+
+    #
     # called?
     #
     describe "#called?" do
