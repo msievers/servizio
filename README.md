@@ -10,7 +10,7 @@ I liked the ideas presented there, so I began to use them. Quickly I realised, t
 
 ## TL;DR
 
-Servizio is a class you can derive your service classes from. It wraps the ```call``` method of the derived class by prepending some code to the derived class' singleton class. The main purpose is to provide some conventions for and to ease the creation of service classes.
+Servizio is a class you can derive your service classes from. It includes ```ActiveModel::Model``` and ```ActiveModel::Validations``` and wraps the ```call``` method of the derived class by prepending some code to the derived class' singleton class. The main purpose is to provide some conventions for and to ease the creation of service classes.
 
 ```ruby
 class MyService < Servizio::Service
