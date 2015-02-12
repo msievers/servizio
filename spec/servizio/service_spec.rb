@@ -1,4 +1,44 @@
 describe Servizio::Service do
+  context "if called as a function" do
+    before(:each) do
+      class Calculator
+      end
+
+      Servizio::Service("SumUp") do # described_class does not work here
+        attr_accessor :summands
+
+        def call
+          summands.reduce(:+)
+        end
+      end 
+
+      Servizio::Service("Calculator::SumUp") do # described_class does not work here
+        attr_accessor :summands
+
+        def call
+          summands.reduce(:+)
+        end
+      end
+    end
+
+    # in order to prevent "already defined" messages
+    after(:each) do
+      Object.send(:remove_const, "Calculator")
+      Object.send(:remove_const, "SumUp")
+    end
+
+    it "creates a service class with the given constant name" do
+      expect(SumUp < Servizio::Service).to be(true)
+      expect(Calculator::SumUp < Servizio::Service).to be(true)
+    end
+
+    it "creates a method with the given constant name" do
+      [Object, Calculator].each do |constant|
+        expect(constant.method_defined?(:SumUp)).to be(true)
+      end
+    end
+  end
+
   context "if derived" do
     let(:service) do
       Class.new(described_class) do

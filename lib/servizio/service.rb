@@ -1,11 +1,33 @@
 require "active_model"
 
+def Servizio::Service(service_name, &block)
+  service_class_name = service_name.split("::").last
+
+  parent_const =
+  service_name.split("::")[0..-2].inject(Object) do |constant, child_constant_name|
+    constant.const_get(child_constant_name)
+  end
+
+  service_class = Class.new(Servizio::Service, &block)
+  parent_const.const_set(service_class_name, service_class)
+  
+  # Object.define_method does the same as "def some_method", but it's private
+  parent_const.send(:define_method, service_class_name.to_sym) do |*args|
+    if (operation = service_class.new(*args)).call!.succeeded?
+      operation.result
+    else
+      raise Servizio::Service::OperationFailedError
+    end
+  end
+end
+
 class Servizio::Service
   include ActiveModel::Model
   include ActiveModel::Validations
 
   attr_accessor :result
 
+  OperationFailedError = Class.new(StandardError)
   OperationNotCalledError = Class.new(StandardError)
 
   # http://stackoverflow.com/questions/14431723/activemodelvalidations-on-anonymous-class
