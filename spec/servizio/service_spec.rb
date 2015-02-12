@@ -1,81 +1,44 @@
 describe Servizio::Service do
-  context "if called as a function" do
-    before(:each) do
-      class Calculator
+  let(:service) do
+    Class.new(described_class) do
+      attr_accessor :should_fail
+      attr_accessor :summands
+
+      validates_presence_of :summands
+
+      def should_fail?
+        @should_fail == true
       end
 
-      Servizio::Service("SumUp") do # described_class does not work here
-        attr_accessor :summands
-
-        def call
+      def call
+        if should_fail?
+          errors.add(:call, "failed")
+        else
           summands.reduce(:+)
         end
-      end 
+      end
+    end
+  end
 
-      Servizio::Service("Calculator::SumUp") do # described_class does not work here
-        attr_accessor :summands
+  describe ".call" do
+    it "creates an instance of the service, calls it with the given arguments and returns the result" do
+      expect(service.call(summands: [1,2])).to eq(3)
+    end
 
-        def call
-          summands.reduce(:+)
-        end
+    context "if the operation is invalid" do
+      it "raises an error" do
+        expect { service.call }.to raise_error(Servizio::Service::OperationInvalidError)
       end
     end
 
-    # in order to prevent "already defined" messages
-    after(:each) do
-      Object.send(:remove_const, "Calculator")
-      Object.send(:remove_const, "SumUp")
-    end
-
-    it "creates a service class with the given constant name" do
-      expect(SumUp < Servizio::Service).to be(true)
-      expect(Calculator::SumUp < Servizio::Service).to be(true)
-    end
-
-    it "creates a method with the given constant name" do
-      [Object, Calculator].each do |constant|
-        expect(constant.method_defined?(:SumUp)).to be(true)
-      end
-    end
-
-    context "if the given constant name is already defined" do
-      it "overwrites the existing constant silently" do
-        class GetItems
-        end
-
-        expect {
-          Servizio::Service("GetItems") do
-            def call
-              ["item", "item"]
-            end
-          end
-        }.not_to output(/GetItems/).to_stderr
+    context "if the operation did not succeeded" do
+      it "raises an error" do
+        expect { service.call(summands: [1,2], should_fail: true) }.to raise_error(Servizio::Service::OperationFailedError)
       end
     end
   end
 
   context "if derived" do
-    let(:service) do
-      Class.new(described_class) do
-        attr_accessor :should_fail
-        attr_accessor :summands
-
-        validates_presence_of :summands
-
-        def should_fail?
-          @should_fail == true
-        end
-
-        def call
-          if should_fail?
-            errors.add(:call, "failed")
-          else
-            summands.reduce(:+)
-          end
-        end
-      end
-    end
-
     let(:summands)             { [1,2,3] }
     let(:succeeding_operation) { service.new summands: summands }
     let(:failing_operation)    { service.new summands: summands, should_fail: true }

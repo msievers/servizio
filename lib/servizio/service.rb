@@ -1,44 +1,5 @@
 require "active_model"
 
-def Servizio::Service(service_name, &block)
-  service_class_name = service_name.split("::").last
-
-  parent_const =
-  service_name.split("::")[0..-2].inject(Object) do |constant, child_constant_name|
-    constant.const_get(child_constant_name)
-  end
-
-  service_class = Class.new(Servizio::Service, &block)
-  
-  # remove previously defined const if present
-  if parent_const.const_defined?(service_class_name)
-    # it's wired ... If there is Bar and you ask Foo.const_defined(:Bar) it
-    # says true, althouh there is no Foo::Bar, just Bar. So there is no 100%
-    # correct way to check of there is Foo::Bar and so we have to rescue.
-    begin
-      parent_const.send(:remove_const, service_class_name)
-    rescue
-    end
-  end
-
-  parent_const.const_set(service_class_name, service_class)
-  
-  # Object.define_method does the same as "def some_method", but it's private
-  parent_const.send(:define_method, service_class_name.to_sym) do |*args|
-    operation = service_class.new(*args)
-
-    if operation.valid?
-      if operation.call!.succeeded?
-        operation.result
-      else
-        raise Servizio::Service::OperationFailedError
-      end
-    else
-      raise Servizio::Service::OperationInvalidError
-    end
-  end
-end
-
 class Servizio::Service
   include ActiveModel::Model
   include ActiveModel::Validations
@@ -52,6 +13,21 @@ class Servizio::Service
   # http://stackoverflow.com/questions/14431723/activemodelvalidations-on-anonymous-class
   def self.name
     super ? super : "__anonymous_servizio_service_class__"
+  end
+
+  # shortcut to call operations, which returns the result and/or throws errors
+  def self.call(*args)
+    operation = self.new(*args)
+
+    if operation.valid?
+      if operation.call!.succeeded?
+        operation.result
+      else
+        raise Servizio::Service::OperationFailedError
+      end
+    else
+      raise Servizio::Service::OperationInvalidError
+    end
   end
 
   def result
