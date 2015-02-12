@@ -25,10 +25,16 @@ def Servizio::Service(service_name, &block)
   
   # Object.define_method does the same as "def some_method", but it's private
   parent_const.send(:define_method, service_class_name.to_sym) do |*args|
-    if (operation = service_class.new(*args)).call!.succeeded?
-      operation.result
+    operation = service_class.new(*args)
+
+    if operation.valid?
+      if operation.call!.succeeded?
+        operation.result
+      else
+        raise Servizio::Service::OperationFailedError
+      end
     else
-      raise Servizio::Service::OperationFailedError
+      raise Servizio::Service::OperationInvalidError
     end
   end
 end
@@ -40,6 +46,7 @@ class Servizio::Service
   attr_accessor :result
 
   OperationFailedError = Class.new(StandardError)
+  OperationInvalidError = Class.new(StandardError)
   OperationNotCalledError = Class.new(StandardError)
 
   # http://stackoverflow.com/questions/14431723/activemodelvalidations-on-anonymous-class
