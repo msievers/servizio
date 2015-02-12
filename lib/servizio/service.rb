@@ -9,6 +9,18 @@ def Servizio::Service(service_name, &block)
   end
 
   service_class = Class.new(Servizio::Service, &block)
+  
+  # remove previously defined const if present
+  if parent_const.const_defined?(service_class_name)
+    # it's wired ... If there is Bar and you ask Foo.const_defined(:Bar) it
+    # says true, althouh there is no Foo::Bar, just Bar. So there is no 100%
+    # correct way to check of there is Foo::Bar and so we have to rescue.
+    begin
+      parent_const.send(:remove_const, service_class_name)
+    rescue
+    end
+  end
+
   parent_const.const_set(service_class_name, service_class)
   
   # Object.define_method does the same as "def some_method", but it's private

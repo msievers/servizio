@@ -37,6 +37,21 @@ describe Servizio::Service do
         expect(constant.method_defined?(:SumUp)).to be(true)
       end
     end
+
+    context "if the given constant name is already defined" do
+      it "overwrites the existing constant silently" do
+        class GetItems
+        end
+
+        expect {
+          Servizio::Service("GetItems") do
+            def call
+              ["item", "item"]
+            end
+          end
+        }.not_to output(/GetItems/).to_stderr
+      end
+    end
   end
 
   context "if derived" do
