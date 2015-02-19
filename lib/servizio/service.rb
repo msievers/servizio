@@ -38,8 +38,13 @@ class Servizio::Service
     @called == true
   end
 
+  def failed!(error = :failed)
+    errors[:call] = error
+    self # for chaining
+  end
+
   def failed?
-    called? && errors.present?
+    errors.present?
   end
 
   def succeeded?

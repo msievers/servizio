@@ -97,9 +97,22 @@ describe Servizio::Service do
       end
     end
 
+    #
+    # failed!
+    #
+    describe "#failed!" do
+      it "marks the operation as failed" do
+        expect(succeeding_operation.failed!.failed?).to be(true)
+      end
+    end
+
+    #
+    # failed?
+    #
     describe "#failed?" do
       context "if the operation was called without errors" do
         it "returns false" do
+
           expect(succeeding_operation.call.failed?).to be(false)
         end
       end
@@ -107,13 +120,6 @@ describe Servizio::Service do
       context "if the operation added something to \"errors\"" do
         it "returns true" do
           expect(failing_operation.call.failed?).to be(true)
-        end
-      end
-
-      context "if the operation was not called" do
-        it "returns false" do
-          expect(succeeding_operation.failed?).to be(false)
-          expect(failing_operation.failed?).to be(false)
         end
       end
     end
