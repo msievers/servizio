@@ -3,6 +3,8 @@
 # define column types for attributes, so that the input types can be determined
 # by simple_form automatically. Simple include this into your service class.
 #
+require_relative "../service"
+
 module Servizio::Service::DefineColumnType
   def self.included(base)
     base.extend ClassMethods

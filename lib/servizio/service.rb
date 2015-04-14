@@ -1,6 +1,8 @@
 require "active_model"
 
 class Servizio::Service
+  require_relative "./service/define_column_type"
+
   include ActiveModel::Model
   include ActiveModel::Validations
 
