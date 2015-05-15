@@ -3,6 +3,10 @@
 # define column types for attributes, so that the input types can be determined
 # by simple_form automatically. Simple include this into your service class.
 #
+# For a list of column types supported by rails have a look at
+#
+# http://stackoverflow.com/questions/3956186/where-is-the-documentation-page-for-activerecord-data-types
+#
 require_relative "../service"
 
 module Servizio::Service::DefineColumnType
