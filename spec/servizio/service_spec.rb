@@ -26,14 +26,32 @@ describe Servizio::Service do
     end
 
     context "if the operation is invalid" do
+      subject { service.call }
+
+      it { is_expected.to be_nil }
+    end
+
+    context "if the operation did not succeeded" do
+      subject { service.call(summands: [1,2], should_fail: true) }
+
+      it { is_expected.to be_nil }
+    end
+  end
+  
+  describe ".call!" do
+    it "creates an instance of the service, calls it with the given arguments and returns the result" do
+      expect(service.call!(summands: [1,2])).to eq(3)
+    end
+
+    context "if the operation is invalid" do
       it "raises an error" do
-        expect { service.call }.to raise_error(Servizio::Service::OperationInvalidError)
+        expect { service.call! }.to raise_error(Servizio::Service::OperationInvalidError)
       end
     end
 
     context "if the operation did not succeeded" do
       it "raises an error" do
-        expect { service.call(summands: [1,2], should_fail: true) }.to raise_error(Servizio::Service::OperationFailedError)
+        expect { service.call!(summands: [1,2], should_fail: true) }.to raise_error(Servizio::Service::OperationFailedError)
       end
     end
   end

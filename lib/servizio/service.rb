@@ -17,8 +17,17 @@ class Servizio::Service
     super ? super : "__anonymous_servizio_service_class__"
   end
 
-  # shortcut to call operations, which returns the result and/or throws errors
+  # shortcut to call operations, which returns the result or nik
   def self.call(*args)
+    operation = self.new(*args)
+
+    if operation.valid? && operation.call!.succeeded?
+      operation.result
+    end
+  end
+  
+  # shortcut to call operations, which returns the result and/or throws errors
+  def self.call!(*args)
     operation = self.new(*args)
 
     if operation.valid?
