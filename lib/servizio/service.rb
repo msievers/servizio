@@ -80,7 +80,9 @@ class Servizio::Service
         self
       end
 
-      alias_method :call!, :call
+      def call!
+        call
+      end
     end
 
     def inherited(subclass)
